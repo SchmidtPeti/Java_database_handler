@@ -14,6 +14,12 @@ public class User {
     private String password;
     private String email;
     private String aboutthisuser;
+    public User(String username,String password,String email,String aboutthisuser){
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.aboutthisuser = aboutthisuser;
+    }
     public void set_username(String username){
     this.username = username;
     }
