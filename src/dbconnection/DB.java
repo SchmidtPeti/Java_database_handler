@@ -16,113 +16,51 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.*;
 
 
 public class DB {
+    //local database
     final String JDBC_DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
     final String URL = "jdbc:derby:sampleDB;create=true";
-    final String USERNAME = "";
-    final String PASSWORD = "";
+    //remote database 
+    final String REMOTE_JDBC_DRIVER = "com.mysql.jdbc.Driver";
+    final String REMOTE_URL = "jdbc:mysql://localhost/test?"+"user=root&password=";
+    //final String USERNAME = "";
+    //final String PASSWORD = "";
+    //remote database
     
-    //Létrehozzuk a kapcsolatot (hidat)
+    //These things for every db 
     Connection conn = null;
     Statement createStatement = null;
     DatabaseMetaData dbmd = null;
-    private void essential_info(String tablename,DatabaseMetaData dbmd){
-     /*
-import java.io.*;
-
-public class Test {
-    public static void main(String [] args) {
-
-        // The name of the file to open.
-        String fileName = "temp.txt";
-
-        // This will reference one line at a time
-        String line = null;
-
+    //private void essential_info(String tablename,DatabaseMetaData dbmd)
+    public DB(String table_name,Boolean remote) {
+        if(!remote){
         try {
-            // FileReader reads text files in the default encoding.
-            FileReader fileReader = 
-                new FileReader(fileName);
-
-            // Always wrap FileReader in BufferedReader.
-            BufferedReader bufferedReader = 
-                new BufferedReader(fileReader);
-
-            while((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
-            }   
-
-            // Always close files.
-            bufferedReader.close();         
-        }
-        catch(FileNotFoundException ex) {
-            System.out.println(
-                "Unable to open file '" + 
-                fileName + "'");                
-        }
-        catch(IOException ex) {
-            System.out.println(
-                "Error reading file '" 
-                + fileName + "'");                  
-            // Or we could just do this: 
-            // ex.printStackTrace();
-        }
-    }
-}
-create file 
-      */   
-     
-     /*
-     write file 
-     import java.io.*;
-
-public class Test {
-    public static void main(String [] args) {
-
-        // The name of the file to open.
-        String fileName = "temp.txt";
-
-        try {
-            // Assume default encoding.
-            FileWriter fileWriter =
-                new FileWriter(fileName);
-
-            // Always wrap FileWriter in BufferedWriter.
-            BufferedWriter bufferedWriter =
-                new BufferedWriter(fileWriter);
-
-            // Note that write() does not automatically
-            // append a newline character.
-            bufferedWriter.write("Hello there,");
-            bufferedWriter.write(" here is some text.");
-            bufferedWriter.newLine();
-            bufferedWriter.write("We are writing");
-            bufferedWriter.write(" the text to the file.");
-
-            // Always close files.
-            bufferedWriter.close();
-        }
-        catch(IOException ex) {
-            System.out.println(
-                "Error writing to file '"
-                + fileName + "'");
-            // Or we could just do this:
-            // ex.printStackTrace();
-        }
-    }
-}
-     */
-    }
-    public DB(String table_name) {
-        //Megpróbáljuk életre kelteni
-        try {
+            try {
+                Class.forName(JDBC_DRIVER);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(DB.class.getName()).log(Level.SEVERE, null, ex);
+            }
             conn = DriverManager.getConnection(URL);
             System.out.println("A híd létrejött");
         } catch (SQLException ex) {
             System.out.println("Valami baj van a connection (híd) létrehozásakor.");
             System.out.println(""+ex);
+        }
+        }
+        else{
+            try {
+                Class.forName(REMOTE_JDBC_DRIVER);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(DB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                conn = DriverManager.getConnection(REMOTE_URL);
+            } catch (SQLException ex) {
+                Logger.getLogger(DB.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         
         //Ha életre kelt, csinálunk egy megpakolható teherautót
@@ -155,7 +93,6 @@ public class Test {
         }       
     }
     
-    
     public void addUser(User user){
         try {
 //            String sql = "insert into users values ('" + name + "','" + address + "')";
@@ -178,8 +115,8 @@ public class Test {
         String sql = "select * from users";
         try {
             ResultSet rs = createStatement.executeQuery(sql);
-            DatabaseMetaData metadb = rs.getMetaData();
-            metadb.getmax
+            //DatabaseMetaData metadb = rs.getMetaData();
+           // metadb.getmax
             while (rs.next()){
                 String name = rs.getString("name");
                 String address = rs.getString("address");
@@ -216,24 +153,82 @@ public class Test {
             
             while (rs.next()){
             //    User actualUser = new User(rs.getString("name"),rs.getString("name"));
-                users.add(actualUser);
+                //users.add(actualUser);
             }
         } catch (SQLException ex) {
             System.out.println("Valami baj van a userek kiolvasásakor");
             System.out.println(""+ex);
         }
       return users;
-    }
-    
-    public void addUser(User user){
-      try {
-        String sql = "insert into users values (?,?)";
-        PreparedStatement preparedStatement = conn.prepareStatement(sql);
-        preparedStatement.setString(1, user.getName());
-        preparedStatement.setString(2, user.getAddress());
-        preparedStatement.execute();
-        } catch (SQLException ex) {
-            System.out.println("Valami baj van a user hozzáadásakor");
-            System.out.println(""+ex);
+    }   
+    public void write_file(String table_name){
+       // The name of the file to open.
+        String fileName = "db.ini";
+
+        try {
+            // Assume default encoding.
+            FileWriter fileWriter =
+                new FileWriter(fileName);
+
+            // Always wrap FileWriter in BufferedWriter.
+            BufferedWriter bufferedWriter =
+                new BufferedWriter(fileWriter);
+
+            // Note that write() does not automatically
+            // append a newline character.
+            bufferedWriter.write("TABLE NAME:"+table_name);
+          //  bufferedWriter.write("DRIVER:"+);
+            /*bufferedWriter.write(" here is some text.");
+            bufferedWriter.newLine();
+            bufferedWriter.write("We are writing");
+            bufferedWriter.write(" the text to the file.");*/
+
+            // Always close files.
+            bufferedWriter.close();
+        }
+        catch(IOException ex) {
+            System.out.println(
+                "Error writing to file '"
+                + fileName + "'");
+            // Or we could just do this:
+            // ex.printStackTrace();
         }
     }
+    public void exits_db_file(String table_name){
+        // The name of the file to open.
+        String fileName = "temp.txt";
+
+        // This will reference one line at a time
+        String line = null;
+
+        try {
+            // FileReader reads text files in the default encoding.
+            FileReader fileReader = 
+                new FileReader(fileName);
+
+            // Always wrap FileReader in BufferedReader.
+            BufferedReader bufferedReader = 
+                new BufferedReader(fileReader);
+
+            while((line = bufferedReader.readLine()) != null) {
+                System.out.println(line);
+            }   
+
+            // Always close files.
+            bufferedReader.close();         
+        }
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                "Unable to open file '" + 
+                fileName + "'");                
+        }
+        catch(IOException ex) {
+            System.out.println(
+                "Error reading file '" 
+                + fileName + "'");                  
+            // Or we could just do this: 
+            // ex.printStackTrace();
+        }
+        //return true;
+    }
+}
